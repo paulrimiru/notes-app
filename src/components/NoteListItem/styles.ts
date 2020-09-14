@@ -10,12 +10,17 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: 16,
     borderRadius: 24,
     height: 54,
+    backgroudColor: '#e0e0e0',
 
     '&:hover': {
       cursor: "pointer",
     }
   },
   title: {
+    paddingLeft: 12,
+  },
+  newNoteTextField: {
+    flexGrow: 1,
     paddingLeft: 12,
   }
 }));
