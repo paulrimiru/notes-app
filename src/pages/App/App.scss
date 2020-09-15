@@ -18,16 +18,47 @@
 
     &-master {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       justify-content: flex-start;
       height: 100%;
-      width: 20%;
-      padding: 12px;
       background-color: #bdbdbd;
 
-      &__list {
+      &__categories {
         display: flex;
         flex-direction: column;
+        justify-content: flex-start;
+        width: 400px;
+        padding: 12px;
+
+        &-header {
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+        }
+      }
+
+      &__notes {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        width: 0px;
+        opacity: 0;
+        margin: 0px;
+        transition: width 500ms cubic-bezier(0.4, 0, 0.6, 1) 100ms, margin 450ms cubic-bezier(0.4, 0, 0.6, 1) 50ms, opacity 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+        &-visible {
+          display: flex;
+          flex-direction: column;
+          flex-grow: 1;
+          width: 400px;
+          opacity: 1;
+          margin: 24px 24px 12px 24px;
+          transition: width 500ms cubic-bezier(0.4, 0, 0.6, 1), margin 750ms cubic-bezier(0.4, 0, 0.6, 1), opacity 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 200ms;
+        }
+      }
+
+      &__list {
         flex-grow: 1;
         margin-top: 24px;
       }

@@ -1,17 +1,23 @@
-import { Button } from '@material-ui/core';
+import { Button, List } from '@material-ui/core';
 import React, { useState } from 'react';
 
 import Typography from '@material-ui/core/Typography/Typography';
 import AddIcon from '@material-ui/icons/Add';
 
 import useAppStyles from './styles';
+import CategoryList, { Category } from '../../components/CategoryList';
 
 import './App.scss';
-import NoteList, { Note } from '../../components/NoteList';
+import { Note } from '../../components/NoteListItem';
+import NoteListItem from '../../components/NoteListItem';
+import TextField from '@material-ui/core/TextField/TextField';
 
 function App() {
 
-  const [categories, setCategories] = useState<Note[]>(["Lorepsum ipsum", "ipsum lorepsum", "just another note"].map((note, index) => ({ id: index.toString(), title: note, mode: 'display' })));
+  const [categories, setCategories] = useState<Category[]>(["Lorepsum ipsum", "ipsum lorepsum", "just another category"].map((note, index) => ({ id: index.toString(), title: note, mode: 'display' })));
+  const [notes, setNotes] = useState<Note[]>(["Lorepsum", "just another note"].map((note, index) => ({ id: index.toString(), name: note, mode: 'display' })));
+  const [openNotesPane, setopenNotesPane] = useState(false);
+
   const classes = useAppStyles();
 
   const handleDelete = (id: string) => {
@@ -35,27 +41,91 @@ function App() {
   const addNew = () => {
     setCategories([...categories, { title: '', id: (categories.length).toString(), mode: 'edit' }])
   }
+  
+  const addNewNote = () => {
+    setNotes([...notes, { name: '', id: (notes.length).toString(), mode: 'edit' }])
+  }
+
+  const toogleNotes = () => {
+    setopenNotesPane(!openNotesPane);
+  }
+
+  const handleSaveNote = (myNote: {name: string, id: string}) => {
+    setNotes(notes.map(note => {
+      if (note.id === myNote.id) {
+        return {
+          ...note,
+          name: myNote.name,
+          mode: 'display'
+        }
+      }
+
+      return note;
+    }))
+  }
+
+  const handleDeleteNote = (id: string) => {
+    setNotes(notes.filter(note => note.id !== id))
+  }
 
   return (
     <div className="app">
       <div className="app-container">
         <div className="app-container-master">
-          <Typography variant="h5" gutterBottom>
-            Notes
-          </Typography>
-          <div className="app-container-master__list">
-            <NoteList data={categories} onSave={handleSave} onDelete={handleDelete} />
+          <div className="app-container-master__categories">
+            <div className="app-container-master__categories-header">
+              <Typography variant="h4">
+                Notes
+              </Typography>
+              <TextField
+                select
+                label="Organisation"
+                SelectProps={{
+                  native: true,
+                }}
+                variant="filled"
+              >
+                {['Analog', 'Google', 'Amazon'].map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </TextField>
+            </div>
+            <div className="app-container-master__list">
+              <CategoryList data={categories} onSave={handleSave} onDelete={handleDelete} onClick={toogleNotes} />
+            </div>
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              className={classes.button}
+              endIcon={<AddIcon />}
+              onClick={addNew}
+            >
+              New
+            </Button>
           </div>
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            className={classes.button}
-            endIcon={<AddIcon />}
-            onClick={addNew}
-          >
-            New
-          </Button>
+          <div className={`app-container-master__notes${openNotesPane ? '-visible' : '' }`}>
+            <Typography variant="h6" gutterBottom>
+              Categories Notes
+            </Typography>
+            <List className={classes.notesList}>
+              {
+                notes.map(note => (<NoteListItem note={note} onNoteSelected={toogleNotes} onSave={handleSaveNote} onDelete={handleDeleteNote}/>))
+              }
+            </List>
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              className={classes.button}
+              endIcon={<AddIcon />}
+              onClick={addNewNote}
+            >
+              New
+            </Button>
+          </div>
         </div>
         <div className="app-container-detail">
           No meeting selected

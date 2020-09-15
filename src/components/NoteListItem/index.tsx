@@ -1,36 +1,52 @@
+import { List, ListItem, ListItemAvatar, Avatar, ListItemText, Typography, Divider, IconButton, TextField, ListItemSecondaryAction } from '@material-ui/core';
 import React, { useState } from 'react';
-
-import { Paper } from '@material-ui/core';
-
-import useNoteItemStyles from './styles';
-import Typography from '@material-ui/core/Typography/Typography';
-import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
-import TextField from '@material-ui/core/TextField/TextField';
+import useStyles from './styles';
 import DoneIcon from '@material-ui/icons/Done';
 
-export interface NoteListItemProps {
+export interface Note {
+  name: string;
   id: string;
-  title: string;
   mode: 'edit' | 'display';
-  onSave: (note: { title: string; id: string }) => void;
+}
+
+export interface NoteListProps {
+  note: Note;
+  onNoteSelected: (id: string) => void;
+  onSave: (note: { name: string; id: string }) => void;
   onDelete: (id: string) => void;
 }
 
-const NoteListItem = ({ title, mode, onSave, onDelete, id }: NoteListItemProps) => {
-  const classes = useNoteItemStyles();
-  const [value, setvalue] = useState(title);
+const NoteList = ({ note, onNoteSelected, onSave, onDelete }: NoteListProps) => {
+  const classes = useStyles();
+  const [value, setvalue] = useState(note.name);
 
-  const handleSave = () => { onSave({ id, title: value }); };
+  console.log(note)
+
+  const handleSave = () => { onSave({ id: note.id, name: value }); };
 
   const displayMode = (
     <>
-      <Typography variant="body1" gutterBottom className={classes.title} >
-        { title }
-      </Typography>
-      <IconButton aria-label="delete"  onClick={() => { onDelete(id); }}>
-        <DeleteIcon />
-      </IconButton>
+      <ListItemAvatar>
+      <Avatar className={classes.avatar}>{note.name.split("")[0]?.toLocaleUpperCase()}</Avatar>
+      </ListItemAvatar>
+      <ListItemText
+        primary={note.name}
+        secondary={<>
+          <Typography
+            component="span"
+            variant="body2"
+            className={classes.inline}
+            color="textPrimary"
+          >
+            Last Modified: 15-06-2020
+          </Typography>
+        </>} />
+        <ListItemSecondaryAction>
+          <IconButton edge="end" aria-label="delete"  onClick={() => onDelete(note.id)}>
+            <DeleteIcon />
+          </IconButton>
+        </ListItemSecondaryAction>
     </>
   )
 
@@ -51,9 +67,13 @@ const NoteListItem = ({ title, mode, onSave, onDelete, id }: NoteListItemProps) 
   )
 
   return (
-  <Paper variant="outlined" className={classes.container}>
-    { mode === 'edit' ? editMode : displayMode }
-  </Paper>)
+    <>
+      <ListItem alignItems="flex-start" button>
+        { note.mode === 'edit' ? editMode : displayMode }
+      </ListItem>
+      <Divider variant="inset" component="li" />
+    </>
+  )
 }
 
-export default NoteListItem;
+export default NoteList;

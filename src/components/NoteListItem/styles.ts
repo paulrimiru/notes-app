@@ -1,28 +1,24 @@
-import { makeStyles } from "@material-ui/core/styles";
+import { makeStyles, Theme, createStyles } from "@material-ui/core";
+import { deepOrange } from "@material-ui/core/colors";
 
-const useStyles = makeStyles((theme) => ({
-  container: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 8,
-    marginBottom: 16,
-    borderRadius: 24,
-    height: 54,
-    backgroudColor: '#e0e0e0',
-
-    '&:hover': {
-      cursor: "pointer",
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    root: {
+      width: '100%',
+      backgroundColor: theme.palette.background.paper,
+    },
+    inline: {
+      display: 'inline',
+    },
+    avatar: {
+      color: theme.palette.getContrastText(deepOrange.A200),
+      backgroundColor: deepOrange.A200,
+    },
+    newNoteTextField: {
+      flexGrow: 1,
+      paddingLeft: 12,
     }
-  },
-  title: {
-    paddingLeft: 12,
-  },
-  newNoteTextField: {
-    flexGrow: 1,
-    paddingLeft: 12,
-  }
-}));
+  }),
+);
 
 export default useStyles;
