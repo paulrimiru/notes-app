@@ -1,4 +1,4 @@
-import { List, ListItem, ListItemAvatar, Avatar, ListItemText, Typography, Divider, IconButton, TextField, ListItemSecondaryAction } from '@material-ui/core';
+import { ListItem, ListItemAvatar, Avatar, ListItemText, Typography, Divider, IconButton, TextField, ListItemSecondaryAction } from '@material-ui/core';
 import React, { useState } from 'react';
 import DeleteIcon from '@material-ui/icons/Delete';
 import useStyles from './styles';
@@ -20,8 +20,6 @@ export interface NoteListProps {
 const NoteList = ({ note, onNoteSelected, onSave, onDelete }: NoteListProps) => {
   const classes = useStyles();
   const [value, setvalue] = useState(note.name);
-
-  console.log(note)
 
   const handleSave = () => { onSave({ id: note.id, name: value }); };
 

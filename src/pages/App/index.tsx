@@ -11,6 +11,7 @@ import './App.scss';
 import { Note } from '../../components/NoteListItem';
 import NoteListItem from '../../components/NoteListItem';
 import TextField from '@material-ui/core/TextField/TextField';
+import Meeting from '../Meeting';
 
 function App() {
 
@@ -112,7 +113,7 @@ function App() {
             </Typography>
             <List className={classes.notesList}>
               {
-                notes.map(note => (<NoteListItem note={note} onNoteSelected={toogleNotes} onSave={handleSaveNote} onDelete={handleDeleteNote}/>))
+                notes.map((note, index) => (<NoteListItem key={index} note={note} onNoteSelected={toogleNotes} onSave={handleSaveNote} onDelete={handleDeleteNote}/>))
               }
             </List>
             <Button
@@ -128,7 +129,7 @@ function App() {
           </div>
         </div>
         <div className="app-container-detail">
-          No meeting selected
+          <Meeting />
         </div>
       </div>
     </div>

@@ -22,7 +22,7 @@ const NoteList = ({ data, onSave, onDelete, onClick }: NoteListProps) => {
       <Typography variant="h6" gutterBottom>
         Categories
       </Typography>
-      { data.map(note => <NoteListItem id={note.id} title={note.title} mode={note.mode} onSave={onSave} onDelete={onDelete} onClick={onClick} />) }
+      { data.map((note, index) => <NoteListItem key={index} id={note.id} title={note.title} mode={note.mode} onSave={onSave} onDelete={onDelete} onClick={onClick} />) }
     </div>
   )
 }
