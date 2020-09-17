@@ -13,7 +13,7 @@ export interface CategoryListItemProps {
   id: string;
   title: string;
   mode: 'edit' | 'display';
-  onSave: (note: { title: string; id: string }) => void;
+  onSave: (note: { name: string }) => void;
   onDelete: (id: string) => void;
   onClick: (id: string) => void;
 }
@@ -22,7 +22,7 @@ const CategoryListItem = ({ title, mode, onSave, onDelete, onClick, id }: Catego
   const classes = useCategoryItemStyles();
   const [value, setvalue] = useState(title);
 
-  const handleSave = () => { onSave({ id, title: value }); };
+  const handleSave = () => { onSave({ name: value }); };
 
   const displayMode = (
     <>
@@ -52,7 +52,7 @@ const CategoryListItem = ({ title, mode, onSave, onDelete, onClick, id }: Catego
   )
 
   return (
-  <Paper variant="outlined" className={classes.container} onClick={() => onClick(id)}>
+  <Paper variant="outlined" className={classes.container} onClick={() => { if (mode === 'display') { onClick(id) } }}>
     { mode === 'edit' ? editMode : displayMode }
   </Paper>)
 }

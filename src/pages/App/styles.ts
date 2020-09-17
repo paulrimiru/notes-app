@@ -6,6 +6,12 @@ const useStyles = makeStyles((theme) => ({
   },
   notesList: {
     flexGrow: 1,
+  },
+  orgModal: {
+    padding: 24
+  },
+  orgSelector: {
+    maxWidth: '50%',
   }
 }));
 

@@ -1,25 +1,49 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Avatar, Chip, IconButton, List, TextField } from '@material-ui/core';
 import Typography from '@material-ui/core/Typography';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import useMeetingStyles from './styles';
 import DoneIcon from '@material-ui/icons/Done';
+import SaveIcon from '@material-ui/icons/Save';
 
 import './meeting.scss';
 import MeetingNoteItem from '../../components/MeetingNoteItem';
 
-const Meeting = () => {
+interface MeetingProps {
+  note: {
+    note?: string;
+    name: string;
+    id: string;
+  },
+  onUpdate: (data: any) => void;
+}
+
+const Meeting = (props: MeetingProps) => {
+  const {note, onUpdate} = props;
   const classes = useMeetingStyles();
   const [meetingNotes, setMeetingNotes] = useState<{ note: string; id: string; title: string; mode: 'edit' | 'display'; }[]>([]);
   const [textFieldValue, setTextFieldValue] = useState('');
   const [titleFieldValue, setTitleFieldValue] = useState('');
+  const [attendees, setAttendees] = useState(["Me"]);
 
   const handleCreate = () => {
     setMeetingNotes([...meetingNotes, { id: meetingNotes.length.toString(), mode: 'display', title: `${new Intl.DateTimeFormat().format(new Date())} - ${titleFieldValue}`, note: textFieldValue, }]);
     setTextFieldValue('');
     setTitleFieldValue('')
   }
+
+  useEffect(() => {
+    console.log(note)
+    if (note.note) {
+      const meeting = JSON.parse(note.note);
+      setAttendees(meeting.attendees);
+      setMeetingNotes(meeting.notes);
+    } else {
+      setAttendees(["me"]);
+      setMeetingNotes([]);
+    }
+  }, [props])
 
   const handleSave = (note: { note?: string; title?: string; id: string}) => {
     setMeetingNotes(meetingNotes.map(mNote => {
@@ -52,14 +76,37 @@ const Meeting = () => {
     }))
   }
 
+  const handleUpdateNote = () => {
+    const myNotes = {
+      attendees,
+      notes: meetingNotes
+    }
+
+    const noteString = JSON.stringify(myNotes);
+    onUpdate({
+      id: note.id,
+      note: noteString
+    })
+  }
+
+  if (!note.id) {
+    return <div className="nomeeting">No meeting selected</div>
+  }
+
   return (
     <div className="meeting">
       <Typography variant="h6" gutterBottom className={classes.header}>
-        Meeting one
+        { note.name }
       </Typography>
       <Autocomplete
         className={classes.attendees}
         multiple
+        value={attendees}
+        onChange={(event, newValue) => {
+          if (newValue) {
+            setAttendees(newValue)
+          }
+        }}
         id="tags-filled"
         options={["Me", "Team mate 1", "New Team mate", "Third Team mate", "Fourth Team mate", "Fifth Team mate"]}
         defaultValue={["Me"]}
@@ -96,9 +143,14 @@ const Meeting = () => {
             variant="filled"
           />
         </div>
-      <IconButton type="submit" className={classes.doneButton} aria-label="search" onClick={(event) => { handleCreate(); }}>
-        <DoneIcon />
-      </IconButton>
+      <div className={classes.actions}>
+        <IconButton className={classes.doneButton} aria-label="search" onClick={(event) => { handleCreate(); }}>
+          <DoneIcon />
+        </IconButton>
+        <IconButton className={classes.doneButton} aria-label="search" onClick={(event) => { handleUpdateNote(); }}>
+          <SaveIcon />
+        </IconButton>
+      </div>
     </div>
     </div>
   )

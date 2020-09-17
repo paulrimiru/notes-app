@@ -45,6 +45,12 @@ const useMeetingStyles = makeStyles((theme: Theme) =>
       display: 'flex',
       flexDirection: 'column',
       width: '100%'
+    },
+    actions: {
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center'
     }
   }),
 );

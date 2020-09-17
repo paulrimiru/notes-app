@@ -21,7 +21,6 @@ const Auth = () => {
   const classes = useAuthStyles();
   const [showSuccess, showError] = useMessage();
   
-
   const handleSubmit = async (data: any) => {
     setLoading(true);
     if (state === 'login') {
@@ -121,8 +120,6 @@ const Auth = () => {
     },
   ]
 
-  console.log('>>>', token)
-
   return (
     <div className="login">
       <LoaderComponent loading={loading}/>
@@ -161,3 +158,4 @@ const Auth = () => {
 };
 
 export default Auth;
+  

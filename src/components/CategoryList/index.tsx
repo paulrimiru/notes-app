@@ -5,13 +5,13 @@ import NoteListItem from '../CategoryListItem';
 
 export interface Category {
   id: string;
-  title: string;
+  name: string;
   mode: 'edit' | 'display';
 }
 
 export interface NoteListProps {
   data: Category[];
-  onSave: (note: { title: string; id: string }) => void;
+  onSave: (note: { name: string }) => void;
   onDelete: (id: string) => void;
   onClick: (id: string) => void;
 }
@@ -22,7 +22,7 @@ const NoteList = ({ data, onSave, onDelete, onClick }: NoteListProps) => {
       <Typography variant="h6" gutterBottom>
         Categories
       </Typography>
-      { data.map((note, index) => <NoteListItem key={index} id={note.id} title={note.title} mode={note.mode} onSave={onSave} onDelete={onDelete} onClick={onClick} />) }
+      { data.map((note, index) => <NoteListItem key={index} id={note.id} title={note.name} mode={note.mode} onSave={onSave} onDelete={onDelete} onClick={onClick} />) }
     </div>
   )
 }

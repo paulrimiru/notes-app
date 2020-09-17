@@ -1,5 +1,5 @@
-import { Button, List } from '@material-ui/core';
-import React, { useState } from 'react';
+import { Button, Dialog, List } from '@material-ui/core';
+import React, { useEffect, useState } from 'react';
 
 import Typography from '@material-ui/core/Typography/Typography';
 import AddIcon from '@material-ui/icons/Add';
@@ -12,65 +12,237 @@ import { Note } from '../../components/NoteListItem';
 import NoteListItem from '../../components/NoteListItem';
 import TextField from '@material-ui/core/TextField/TextField';
 import Meeting from '../Meeting';
+import LoaderComponent from '../../components/Loader';
+import { useMessage } from '../../utils/hooks';
+import { Form } from '../../components/Form';
+import { http } from '../../utils/axios';
+import { useHistory } from 'react-router-dom';
+
+interface Organisation {
+  name: string;
+  id: string;
+  selected: boolean;
+}
 
 function App() {
-
-  const [categories, setCategories] = useState<Category[]>(["Lorepsum ipsum", "ipsum lorepsum", "just another category"].map((note, index) => ({ id: index.toString(), title: note, mode: 'display' })));
-  const [notes, setNotes] = useState<Note[]>(["Lorepsum", "just another note"].map((note, index) => ({ id: index.toString(), name: note, mode: 'display' })));
-  const [openNotesPane, setopenNotesPane] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [organisations, setOrganisations] = useState<Organisation[]>([]);
+  
+  const [openNotesPane, setopenNotesPane] = useState({ open: false, selectedCategory: '' });
+  const [showSuccess, showError] = useMessage();
+  const [openOrganisationDialog, setOpenOrganisationDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<{
+    note?: string;
+    name: string;
+    id: string;
+  }>({ name: '', id: ''});
 
   const classes = useAppStyles();
+  const history = useHistory();
+
+  useEffect(() => {
+    setLoading(true);
+    fetchOrganisations()
+  }, []);
+
+  useEffect(() => {
+    if (organisations.length){
+      setLoading(true);
+      fetchCategories(organisations.find(organ => organ.selected)?.id || organisations[0].id)
+    }
+  }, [organisations]);
+
+
+  const displayMessage = (status: string, message?: string) => {
+    switch (status) {
+      case 'success':
+        showSuccess('Information fetched')
+        break;
+      case 'error':
+        showError(message || 'request failed');
+        break;
+    }
+  }
 
   const handleDelete = (id: string) => {
     setCategories(categories.filter(category => category.id !== id));
   }
 
-  const handleSave = (note: {title: string, id: string}) => {
-    setCategories(categories.map(category => {
-      if (category.id === note.id) {
-        return {
-          ...category,
-          title: note.title,
-          mode: 'display'
-        }
-      }
-
-      return category;
-    }))
-  }
-
   const addNew = () => {
-    setCategories([...categories, { title: '', id: (categories.length).toString(), mode: 'edit' }])
+    setCategories([...categories, { name: '', id: (categories.length).toString(), mode: 'edit' }])
   }
   
   const addNewNote = () => {
     setNotes([...notes, { name: '', id: (notes.length).toString(), mode: 'edit' }])
   }
 
-  const toogleNotes = () => {
-    setopenNotesPane(!openNotesPane);
+  const toogleNotes = async (id: string) => {
+    console.log(id);
+
+    setopenNotesPane({
+      open: openNotesPane.selectedCategory === id ? !openNotesPane.open : openNotesPane.open,
+      selectedCategory: id
+    });
+
+    if (openNotesPane.selectedCategory !== id) {
+      await fetchNotes(id)
+    }
   }
 
-  const handleSaveNote = (myNote: {name: string, id: string}) => {
-    setNotes(notes.map(note => {
-      if (note.id === myNote.id) {
-        return {
-          ...note,
-          name: myNote.name,
-          mode: 'display'
-        }
-      }
-
-      return note;
-    }))
+  const onNoteSelected = (note: Note) => {
+    setSelectedNote({
+      id: note.id,
+      name: note.name,
+      note: note.notes
+    });
   }
 
   const handleDeleteNote = (id: string) => {
     setNotes(notes.filter(note => note.id !== id))
   }
 
+  const handleOrganisationCreate = async(data: any) => {
+    try {
+      const resp = await http().post('/organisation', data)
+      setOrganisations([...organisations, { ...resp.data, selected: true }])
+      setOpenOrganisationDialog(false)
+      displayMessage('success')
+    } catch(err) {
+      console.log(err)
+      displayMessage('error', err.message)
+    }
+  }
+  
+  const handleCategoryCreate = async(data: any) => {
+    setLoading(true);
+    try {
+      const resp = await http().post('/category', {...data, organisationId: organisations.find(organ => organ.selected)?.id || organisations[0].id })
+      setCategories([...(categories.filter(category => category.mode !== 'edit')), { ...resp.data, mode: 'display' }])
+      setLoading(false);
+      displayMessage('success')
+    } catch(err) {
+      setLoading(false);
+      console.log(err)
+      displayMessage('error', err.message)
+    }
+  }
+
+  const handleNoteCreate = async(data: any) => {
+    setLoading(true);
+    try {
+      const resp = await http().post('/note', { ...data, categoryId: openNotesPane.selectedCategory })
+      setNotes([...(notes.filter(category => category.mode !== 'edit')), { ...resp.data, mode: 'display' }])
+      setLoading(false);
+      displayMessage('success')
+    } catch(err) {
+      setLoading(false);
+      console.log(err)
+      displayMessage('error', err.message)
+    }
+  }
+
+  const handleNoteUpdate = async (data: any) => {
+    setLoading(true);
+    try {
+      await http().put('/note', data)
+      setNotes(notes.map(note => {
+        if (note.id ===  data.id) {
+          return {
+            ...note,
+            note: data.note
+          };
+        }
+
+        return note;
+      }))
+      setLoading(false);
+      displayMessage('success')
+    } catch(err) {
+      setLoading(false);
+      console.log(err)
+      displayMessage('error', err.message)
+    }
+  }
+
+  const fetchOrganisations = async () => {
+    try {
+      const resp = await http().get('/organisation');
+
+      if (!resp.data.length) {
+        setOpenOrganisationDialog(true)
+        setLoading(false);
+        return
+      }
+
+      setOrganisations(resp.data.map((org: any, index: number) => ({...org, selected: index === 0})));
+      setLoading(false);
+      displayMessage('success', 'Fetched organisations successfully');
+    } catch (err) {
+      console.log(err)
+      setLoading(false);
+      displayMessage('error', err.message)
+    }
+  }
+
+  const fetchCategories = async (organisationId: string) => {
+    try {
+      const resp = await http().get(`/category/${organisationId}`);
+      setCategories(resp.data.map((category:any) => ({ ...category, mode: 'display' })))
+      setLoading(false);
+      displayMessage('success', 'Fetched categories successfully');
+    } catch (err) {
+      console.log(err)
+      setLoading(false);
+      displayMessage('error', err.message)
+    }
+  }
+
+
+  const fetchNotes = async (categoryId: string) => {
+    try {
+      const resp = await http().get(`/note/${categoryId}`);
+      setNotes(resp.data.map((note:any) => ({ ...note, mode: 'display' })))
+      setLoading(false);
+      displayMessage('success', 'Fetched notes successfully');
+    } catch (err) {
+      console.log(err)
+      setLoading(false);
+      displayMessage('error', err.message)
+    }
+  }
+
   return (
     <div className="app">
+      <LoaderComponent loading={loading}/>
+      <Dialog
+        open={openOrganisationDialog}
+        className={classes.orgModal}
+        fullWidth
+        aria-labelledby="simple-modal-title"
+        aria-describedby="simple-modal-description"
+      >
+        <Form
+            title={"Please create an organisation"}
+            actionsName={"submit"}
+            onSubmit={handleOrganisationCreate}
+            hasCancel={false}
+            fields={[
+              {
+                type: 'text',
+                name: 'name',
+                validations: {
+                  required: "Required",
+                  min: {
+                    value: 2,
+                    message: 'Please enter a name with at least 2 characters'
+                  }
+                }
+              }
+            ]}
+          />
+      </Dialog>
       <div className="app-container">
         <div className="app-container-master">
           <div className="app-container-master__categories">
@@ -80,21 +252,23 @@ function App() {
               </Typography>
               <TextField
                 select
-                label="Organisation"
+                helperText="Organisation"
                 SelectProps={{
                   native: true,
                 }}
                 variant="filled"
+                fullWidth
+                className={classes.orgSelector}
               >
-                {['Analog', 'Google', 'Amazon'].map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                {organisations.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.name}
                   </option>
                 ))}
               </TextField>
             </div>
             <div className="app-container-master__list">
-              <CategoryList data={categories} onSave={handleSave} onDelete={handleDelete} onClick={toogleNotes} />
+              <CategoryList data={categories} onSave={handleCategoryCreate} onDelete={handleDelete} onClick={toogleNotes} />
             </div>
             <Button
               variant="contained"
@@ -106,14 +280,24 @@ function App() {
             >
               New
             </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              onClick={() => { history.push('/auth'); localStorage.removeItem('token')}}
+            >
+              Logout
+            </Button>
           </div>
-          <div className={`app-container-master__notes${openNotesPane ? '-visible' : '' }`}>
+          <div className={`app-container-master__notes${openNotesPane.open ? '-visible' : '' }`}>
             <Typography variant="h6" gutterBottom>
-              Categories Notes
+              {categories.find(category => category.id === openNotesPane.selectedCategory)?.name} Notes
             </Typography>
             <List className={classes.notesList}>
               {
-                notes.map((note, index) => (<NoteListItem key={index} note={note} onNoteSelected={toogleNotes} onSave={handleSaveNote} onDelete={handleDeleteNote}/>))
+                notes.map((note, index) => (
+                  <NoteListItem key={index} note={note} onNoteSelected={onNoteSelected} onSave={handleNoteCreate} onDelete={handleDeleteNote} />)
+                )
               }
             </List>
             <Button
@@ -129,7 +313,7 @@ function App() {
           </div>
         </div>
         <div className="app-container-detail">
-          <Meeting />
+          <Meeting note={selectedNote} onUpdate={handleNoteUpdate} />
         </div>
       </div>
     </div>

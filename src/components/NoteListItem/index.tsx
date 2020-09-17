@@ -6,14 +6,16 @@ import DoneIcon from '@material-ui/icons/Done';
 
 export interface Note {
   name: string;
+  notes?: string;
+  updatedAt?: string;
   id: string;
   mode: 'edit' | 'display';
 }
 
 export interface NoteListProps {
   note: Note;
-  onNoteSelected: (id: string) => void;
-  onSave: (note: { name: string; id: string }) => void;
+  onNoteSelected: (note: Note) => void;
+  onSave: (note: { name: string }) => void;
   onDelete: (id: string) => void;
 }
 
@@ -21,7 +23,7 @@ const NoteList = ({ note, onNoteSelected, onSave, onDelete }: NoteListProps) => 
   const classes = useStyles();
   const [value, setvalue] = useState(note.name);
 
-  const handleSave = () => { onSave({ id: note.id, name: value }); };
+  const handleSave = () => { onSave({ name: value }); };
 
   const displayMode = (
     <>
@@ -37,7 +39,7 @@ const NoteList = ({ note, onNoteSelected, onSave, onDelete }: NoteListProps) => 
             className={classes.inline}
             color="textPrimary"
           >
-            Last Modified: 15-06-2020
+            Last Modified: {note.updatedAt}
           </Typography>
         </>} />
         <ListItemSecondaryAction>
@@ -66,7 +68,7 @@ const NoteList = ({ note, onNoteSelected, onSave, onDelete }: NoteListProps) => 
 
   return (
     <>
-      <ListItem alignItems="flex-start" button>
+      <ListItem alignItems="flex-start" button onClick={() => onNoteSelected(note) }>
         { note.mode === 'edit' ? editMode : displayMode }
       </ListItem>
       <Divider variant="inset" component="li" />
