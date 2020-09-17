@@ -2,9 +2,12 @@ import { createMuiTheme, ThemeProvider } from '@material-ui/core';
 import { deepOrange, grey } from '@material-ui/core/colors';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { ReactQueryDevtools } from 'react-query-devtools';
+import { HashRouter } from 'react-router-dom';
 import './index.css';
-import App from './pages/App';
+import Router from './pages/Routes';
 import * as serviceWorker from './serviceWorker';
+import { SnackbarProvider } from 'notistack'
 
 const theme = createMuiTheme({
   palette: {
@@ -20,7 +23,12 @@ const theme = createMuiTheme({
 ReactDOM.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
-      <App />
+      <ReactQueryDevtools initialIsOpen={false} />
+      <SnackbarProvider maxSnack={3}>
+        <HashRouter>
+          <Router />
+        </HashRouter>
+      </SnackbarProvider>
     </ThemeProvider>
   </React.StrictMode>,
   document.getElementById('root')

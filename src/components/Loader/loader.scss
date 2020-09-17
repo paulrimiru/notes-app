@@ -1,0 +1,11 @@
+$primary-color: #ff6e40;
+
+@import 'loaders.css/src/animations/line-scale-pulse-out-rapid.scss';
+
+.loader-hidden {
+  display: none;
+}
+
+.loader-active {
+  display: block;
+}
