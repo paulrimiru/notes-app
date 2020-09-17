@@ -1,8 +1,9 @@
-import { Button, Dialog, List } from '@material-ui/core';
+import { Button, Dialog, IconButton, List } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 
 import Typography from '@material-ui/core/Typography/Typography';
 import AddIcon from '@material-ui/icons/Add';
+import ShareIcon from '@material-ui/icons/Share';
 
 import useAppStyles from './styles';
 import CategoryList, { Category } from '../../components/CategoryList';
@@ -31,7 +32,7 @@ function App() {
   
   const [openNotesPane, setopenNotesPane] = useState({ open: false, selectedCategory: '' });
   const [showSuccess, showError] = useMessage();
-  const [openOrganisationDialog, setOpenOrganisationDialog] = useState(false);
+  const [openOrganisationDialog, setOpenOrganisationDialog] = useState({ open: false, mode: 'create' });
   const [loading, setLoading] = useState(false);
   const [selectedNote, setSelectedNote] = useState<{
     note?: string;
@@ -66,23 +67,43 @@ function App() {
     }
   }
 
-  const handleDelete = (id: string) => {
-    setCategories(categories.filter(category => category.id !== id));
-  }
-
   const addNew = () => {
-    setCategories([...categories, { name: '', id: (categories.length).toString(), mode: 'edit' }])
+    setCategories([...categories, { name: '', id: (categories.length).toString(), mode: 'create' }])
   }
   
   const addNewNote = () => {
-    setNotes([...notes, { name: '', id: (notes.length).toString(), mode: 'edit' }])
+    setNotes([...notes, { name: '', id: (notes.length).toString(), mode: 'create' }])
+  }
+
+  const onSelectForEdit = (id: string) => {
+    setCategories(categories.map(category => {
+      if (category.id === id) {
+        return {
+          ...category,
+          mode: 'edit',
+        }
+      }
+
+      return category;
+    }))
+  }
+
+  const onSelectNoteForEdit = (id: string) => {
+    setNotes(notes.map(note => {
+      if (note.id === id) {
+        return {
+          ...note,
+          mode: 'edit',
+        }
+      }
+
+      return note;
+    }))
   }
 
   const toogleNotes = async (id: string) => {
-    console.log(id);
-
     setopenNotesPane({
-      open: openNotesPane.selectedCategory === id ? !openNotesPane.open : openNotesPane.open,
+      open: (openNotesPane.selectedCategory === id || openNotesPane.selectedCategory === '' ) ? !openNotesPane.open : openNotesPane.open,
       selectedCategory: id
     });
 
@@ -99,15 +120,50 @@ function App() {
     });
   }
 
-  const handleDeleteNote = (id: string) => {
-    setNotes(notes.filter(note => note.id !== id))
+  const handleDeleteNote = async (id: string) => {
+    setLoading(true);
+    try {
+      await http().delete('/note/'+id)
+      setNotes(notes.filter(note => note.id !== id))
+      setLoading(false);
+      displayMessage('success')
+    } catch(err) {
+      setLoading(false);
+      console.log(err)
+      displayMessage('error', err.message)
+    }
+  }
+
+  const handleDeleteCategory = async (id: string) => {
+    setLoading(true);
+    try {
+      await http().delete('/category/'+id)
+      setCategories(categories.filter(category => category.id !== id))
+      setLoading(false);
+      displayMessage('success')
+    } catch(err) {
+      setLoading(false);
+      console.log(err)
+      displayMessage('error', err.message)
+    }
   }
 
   const handleOrganisationCreate = async(data: any) => {
     try {
       const resp = await http().post('/organisation', data)
       setOrganisations([...organisations, { ...resp.data, selected: true }])
-      setOpenOrganisationDialog(false)
+      setOpenOrganisationDialog({...openOrganisationDialog, open: false })
+      displayMessage('success')
+    } catch(err) {
+      console.log(err)
+      displayMessage('error', err.message)
+    }
+  }
+  
+  const handleUpdateOrganisation = async(data: any) => {
+    try {
+      await http().put('/organisation', { id: organisations.find(organ => organ.selected)?.id || organisations[0].id, members: [data.name] })
+      setOpenOrganisationDialog({...openOrganisationDialog, open: false })
       displayMessage('success')
     } catch(err) {
       console.log(err)
@@ -119,6 +175,20 @@ function App() {
     setLoading(true);
     try {
       const resp = await http().post('/category', {...data, organisationId: organisations.find(organ => organ.selected)?.id || organisations[0].id })
+      setCategories([...(categories.filter(category => category.mode !== 'create')), { ...resp.data, mode: 'display' }])
+      setLoading(false);
+      displayMessage('success')
+    } catch(err) {
+      setLoading(false);
+      console.log(err)
+      displayMessage('error', err.message)
+    }
+  }
+  
+  const handleCategoryUpdate = async(data: any) => {
+    setLoading(true);
+    try {
+      const resp = await http().put('/category', data)
       setCategories([...(categories.filter(category => category.mode !== 'edit')), { ...resp.data, mode: 'display' }])
       setLoading(false);
       displayMessage('success')
@@ -133,7 +203,7 @@ function App() {
     setLoading(true);
     try {
       const resp = await http().post('/note', { ...data, categoryId: openNotesPane.selectedCategory })
-      setNotes([...(notes.filter(category => category.mode !== 'edit')), { ...resp.data, mode: 'display' }])
+      setNotes([...(notes.filter(category => category.mode !== 'create')), { ...resp.data, mode: 'display' }])
       setLoading(false);
       displayMessage('success')
     } catch(err) {
@@ -146,17 +216,30 @@ function App() {
   const handleNoteUpdate = async (data: any) => {
     setLoading(true);
     try {
-      await http().put('/note', data)
+      const resp = await http().put('/note', data)
       setNotes(notes.map(note => {
         if (note.id ===  data.id) {
           return {
             ...note,
-            note: data.note
+            notes: data.note || note.notes,
+            name: data.name || note.name,
+            mode: 'display'
           };
         }
 
         return note;
       }))
+      if (data.note) {
+        setSelectedNote({
+          ...selectedNote,
+          note: data.note
+        })
+      } else {
+        setSelectedNote({
+          ...selectedNote,
+          name: data.name
+        })
+      }
       setLoading(false);
       displayMessage('success')
     } catch(err) {
@@ -171,7 +254,7 @@ function App() {
       const resp = await http().get('/organisation');
 
       if (!resp.data.length) {
-        setOpenOrganisationDialog(true)
+        setOpenOrganisationDialog({ ...openOrganisationDialog, open: true })
         setLoading(false);
         return
       }
@@ -217,7 +300,7 @@ function App() {
     <div className="app">
       <LoaderComponent loading={loading}/>
       <Dialog
-        open={openOrganisationDialog}
+        open={openOrganisationDialog.open}
         className={classes.orgModal}
         fullWidth
         aria-labelledby="simple-modal-title"
@@ -226,7 +309,7 @@ function App() {
         <Form
             title={"Please create an organisation"}
             actionsName={"submit"}
-            onSubmit={handleOrganisationCreate}
+            onSubmit={openOrganisationDialog.mode === "create" ? handleOrganisationCreate : handleUpdateOrganisation}
             hasCancel={false}
             fields={[
               {
@@ -246,13 +329,12 @@ function App() {
       <div className="app-container">
         <div className="app-container-master">
           <div className="app-container-master__categories">
+            <Typography variant="h4">
+              Notes
+            </Typography>
             <div className="app-container-master__categories-header">
-              <Typography variant="h4">
-                Notes
-              </Typography>
               <TextField
                 select
-                helperText="Organisation"
                 SelectProps={{
                   native: true,
                 }}
@@ -266,9 +348,18 @@ function App() {
                   </option>
                 ))}
               </TextField>
+              <IconButton aria-label="search" onClick={() => { setOpenOrganisationDialog({ open: true, mode: 'invite' }); }}>
+                <ShareIcon />
+              </IconButton>
             </div>
             <div className="app-container-master__list">
-              <CategoryList data={categories} onSave={handleCategoryCreate} onDelete={handleDelete} onClick={toogleNotes} />
+              <CategoryList
+                data={categories}
+                onSave={handleCategoryCreate}
+                onDelete={handleDeleteCategory}
+                onClick={toogleNotes}
+                selectForEdit={onSelectForEdit}
+                onEdit={handleCategoryUpdate} />
             </div>
             <Button
               variant="contained"
@@ -296,7 +387,15 @@ function App() {
             <List className={classes.notesList}>
               {
                 notes.map((note, index) => (
-                  <NoteListItem key={index} note={note} onNoteSelected={onNoteSelected} onSave={handleNoteCreate} onDelete={handleDeleteNote} />)
+                  <NoteListItem
+                    key={index}
+                    note={note}
+                    onNoteSelected={onNoteSelected}
+                    onSave={handleNoteCreate}
+                    onDelete={handleDeleteNote}
+                    selectForEdit={onSelectNoteForEdit}
+                    onEdit={handleNoteUpdate}
+                     />)
                 )
               }
             </List>
@@ -313,7 +412,7 @@ function App() {
           </div>
         </div>
         <div className="app-container-detail">
-          <Meeting note={selectedNote} onUpdate={handleNoteUpdate} />
+          <Meeting note={selectedNote} onUpdate={handleNoteUpdate} orgId={organisations.find(organ => organ.selected)?.id || organisations[0]?.id } />
         </div>
       </div>
     </div>

@@ -3,13 +3,14 @@ import React, { useState } from 'react';
 import DeleteIcon from '@material-ui/icons/Delete';
 import useStyles from './styles';
 import DoneIcon from '@material-ui/icons/Done';
+import EditIcon from '@material-ui/icons/Edit';
 
 export interface Note {
   name: string;
   notes?: string;
   updatedAt?: string;
   id: string;
-  mode: 'edit' | 'display';
+  mode: 'create' | 'edit' | 'display';
 }
 
 export interface NoteListProps {
@@ -17,13 +18,15 @@ export interface NoteListProps {
   onNoteSelected: (note: Note) => void;
   onSave: (note: { name: string }) => void;
   onDelete: (id: string) => void;
+  selectForEdit: (id: string) => void;
+  onEdit: (note: { name: string, id: string }) => void;
 }
 
-const NoteList = ({ note, onNoteSelected, onSave, onDelete }: NoteListProps) => {
+const NoteList = ({ note, onNoteSelected, onSave, onDelete, selectForEdit, onEdit }: NoteListProps) => {
   const classes = useStyles();
   const [value, setvalue] = useState(note.name);
 
-  const handleSave = () => { onSave({ name: value }); };
+  const handleSave = () => { note.mode === 'create' ? onSave({ name: value }) : onEdit({ name: value, id: note.id }); };
 
   const displayMode = (
     <>
@@ -39,10 +42,13 @@ const NoteList = ({ note, onNoteSelected, onSave, onDelete }: NoteListProps) => 
             className={classes.inline}
             color="textPrimary"
           >
-            Last Modified: {note.updatedAt}
+            Last Modified: {note.updatedAt && new Intl.DateTimeFormat().format(new Date(note.updatedAt))}
           </Typography>
         </>} />
         <ListItemSecondaryAction>
+          <IconButton edge="end" aria-label="edit" onClick={() => selectForEdit(note.id)}>
+            <EditIcon />
+          </IconButton>
           <IconButton edge="end" aria-label="delete"  onClick={() => onDelete(note.id)}>
             <DeleteIcon />
           </IconButton>
@@ -53,7 +59,7 @@ const NoteList = ({ note, onNoteSelected, onSave, onDelete }: NoteListProps) => 
   const editMode = (
     <>
       <TextField
-        label="Category"
+        label="Meeting"
         variant="filled"
         className={classes.newNoteTextField}
         autoFocus
@@ -69,7 +75,7 @@ const NoteList = ({ note, onNoteSelected, onSave, onDelete }: NoteListProps) => 
   return (
     <>
       <ListItem alignItems="flex-start" button onClick={() => onNoteSelected(note) }>
-        { note.mode === 'edit' ? editMode : displayMode }
+        { note.mode !== 'display' ? editMode : displayMode }
       </ListItem>
       <Divider variant="inset" component="li" />
     </>

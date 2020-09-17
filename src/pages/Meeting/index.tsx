@@ -9,6 +9,8 @@ import SaveIcon from '@material-ui/icons/Save';
 
 import './meeting.scss';
 import MeetingNoteItem from '../../components/MeetingNoteItem';
+import { http } from '../../utils/axios';
+import { useMessage } from '../../utils/hooks';
 
 interface MeetingProps {
   note: {
@@ -17,15 +19,18 @@ interface MeetingProps {
     id: string;
   },
   onUpdate: (data: any) => void;
+  orgId?: string;
 }
 
 const Meeting = (props: MeetingProps) => {
-  const {note, onUpdate} = props;
+  const {note, onUpdate, orgId} = props;
   const classes = useMeetingStyles();
   const [meetingNotes, setMeetingNotes] = useState<{ note: string; id: string; title: string; mode: 'edit' | 'display'; }[]>([]);
   const [textFieldValue, setTextFieldValue] = useState('');
   const [titleFieldValue, setTitleFieldValue] = useState('');
   const [attendees, setAttendees] = useState(["Me"]);
+  const [orgMembers, setOrgMembers] = useState([]);
+  const [showSuccess, showError] = useMessage();
 
   const handleCreate = () => {
     setMeetingNotes([...meetingNotes, { id: meetingNotes.length.toString(), mode: 'display', title: `${new Intl.DateTimeFormat().format(new Date())} - ${titleFieldValue}`, note: textFieldValue, }]);
@@ -40,10 +45,32 @@ const Meeting = (props: MeetingProps) => {
       setAttendees(meeting.attendees);
       setMeetingNotes(meeting.notes);
     } else {
-      setAttendees(["me"]);
+      setAttendees([]);
       setMeetingNotes([]);
     }
+    if (orgId)
+      fetchOrganisationMembers(orgId);
   }, [props])
+
+  const fetchOrganisationMembers = async (orgId: string) => {
+    try {
+      const result = await http().get(`/organisation/${orgId}/members`);
+      setOrgMembers(result.data.map((member: any) => member.username));
+    } catch (error) {
+      displayMessage('eror', error.message)
+    }
+  }
+
+  const displayMessage = (status: string, message?: string) => {
+    switch (status) {
+      case 'success':
+        showSuccess('Information fetched')
+        break;
+      case 'error':
+        showError(message || 'request failed');
+        break;
+    }
+  }
 
   const handleSave = (note: { note?: string; title?: string; id: string}) => {
     setMeetingNotes(meetingNotes.map(mNote => {
@@ -108,7 +135,7 @@ const Meeting = (props: MeetingProps) => {
           }
         }}
         id="tags-filled"
-        options={["Me", "Team mate 1", "New Team mate", "Third Team mate", "Fourth Team mate", "Fifth Team mate"]}
+        options={orgMembers}
         defaultValue={["Me"]}
         renderTags={(value: string[], getTagProps: any) =>
           value.map((option: string, index: number) => (
