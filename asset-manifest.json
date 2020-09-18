@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/analog-notes-app/static/css/main.f368fd2e.chunk.css",
+    "main.js": "/analog-notes-app/static/js/main.4b6c8235.chunk.js",
+    "main.js.map": "/analog-notes-app/static/js/main.4b6c8235.chunk.js.map",
+    "runtime-main.js": "/analog-notes-app/static/js/runtime-main.b67a2503.js",
+    "runtime-main.js.map": "/analog-notes-app/static/js/runtime-main.b67a2503.js.map",
+    "static/js/2.83008eab.chunk.js": "/analog-notes-app/static/js/2.83008eab.chunk.js",
+    "static/js/2.83008eab.chunk.js.map": "/analog-notes-app/static/js/2.83008eab.chunk.js.map",
+    "index.html": "/analog-notes-app/index.html",
+    "precache-manifest.5943fc6da6984b18f36fac0385cf67c0.js": "/analog-notes-app/precache-manifest.5943fc6da6984b18f36fac0385cf67c0.js",
+    "service-worker.js": "/analog-notes-app/service-worker.js",
+    "static/css/main.f368fd2e.chunk.css.map": "/analog-notes-app/static/css/main.f368fd2e.chunk.css.map",
+    "static/js/2.83008eab.chunk.js.LICENSE.txt": "/analog-notes-app/static/js/2.83008eab.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.b67a2503.js",
+    "static/js/2.83008eab.chunk.js",
+    "static/css/main.f368fd2e.chunk.css",
+    "static/js/main.4b6c8235.chunk.js"
+  ]
+}
